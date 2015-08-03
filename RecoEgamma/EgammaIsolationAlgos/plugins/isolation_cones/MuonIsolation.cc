@@ -76,11 +76,11 @@ isInIsolationCone(const reco::CandidatePtr& physob,
       result *= ( is_vertex_allowed );
     }
     if (fabs(aspacked -> pdgId()) == 13 ) isMuon = true;
-    result *= (isMuon);
+    result *= (!isMuon);
     result *= deltar2 < _coneSize2 ;
   } else if ( aspf.isNonnull() && aspf.get() ) { 
     if (fabs(aspf -> pdgId() == 13)) isMuon = true;
-    result *= isMuon;   
+    result *= !isMuon;   
     result *= deltar2 < _coneSize2;
   } else {
     throw cms::Exception("InvalidIsolationInput")
