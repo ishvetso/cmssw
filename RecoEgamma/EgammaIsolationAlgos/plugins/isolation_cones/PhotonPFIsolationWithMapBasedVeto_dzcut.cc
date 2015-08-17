@@ -52,28 +52,34 @@ bool isInFootprint(const T& thefootprint, const U& theCandidate)
 }
 
 
-class PhotonPFIsolationWithMapBasedVeto : public citk::IsolationConeDefinitionBase {
+class PhotonPFIsolationWithMapBasedVeto_dzcut : public citk::IsolationConeDefinitionBase {
 public:
-  PhotonPFIsolationWithMapBasedVeto(const edm::ParameterSet& c) :
+  PhotonPFIsolationWithMapBasedVeto_dzcut(const edm::ParameterSet& c) :
     citk::IsolationConeDefinitionBase(c),
     _isolateAgainst(c.getParameter<std::string>("isolateAgainst")), //isolate against either h+, h0 or gamma
     _miniAODVertexCodes(c.getParameter<std::vector<unsigned> >("miniAODVertexCodes")), //quality flags to be used for association with the vertex configurable, the vertex can be chosen
-    _vertexIndex(c.getParameter<int> ("vertexIndex")){} //vertex of interest
+    _vertexIndex(c.getParameter<int> ("vertexIndex"))//vertex of interest
+    {
+      _vertexCollection = c.getParameter<edm::InputTag>("vertices");
+    } 
         
-  PhotonPFIsolationWithMapBasedVeto(const PhotonPFIsolationWithMapBasedVeto&) = delete;
-  PhotonPFIsolationWithMapBasedVeto& operator=(const PhotonPFIsolationWithMapBasedVeto&) =delete;
+  PhotonPFIsolationWithMapBasedVeto_dzcut(const PhotonPFIsolationWithMapBasedVeto_dzcut&) = delete;
+  PhotonPFIsolationWithMapBasedVeto_dzcut& operator=(const PhotonPFIsolationWithMapBasedVeto_dzcut&) =delete;
 
   bool isInIsolationCone(const reco::CandidatePtr& photon,
 			 const reco::CandidatePtr& other) const override final;
   
    
   // this object is needed for reco case
- edm::Handle< edm::ValueMap<std::vector<reco::PFCandidateRef > > > particleBasedIsolationMap;			 
+ edm::Handle< edm::ValueMap<std::vector<reco::PFCandidateRef > > > particleBasedIsolationMap;	
+ edm::Handle<std::vector<reco::Vertex > >  vertices;  		 
  edm::EDGetTokenT<edm::ValueMap<std::vector<reco::PFCandidateRef > > > particleBasedIsolationToken_;
+ edm::EDGetTokenT<std::vector<reco::Vertex > > verticesToken;
  
  virtual void getEventInfo(const edm::Event& iEvent)
   {
       iEvent.getByToken(particleBasedIsolationToken_, particleBasedIsolationMap); 
+      iEvent.getByToken(verticesToken, vertices); 
   };			 
   
   
@@ -81,28 +87,30 @@ public:
   void setConsumes(edm::ConsumesCollector iC)
   {
       particleBasedIsolationToken_ = iC.mayConsume<edm::ValueMap<std::vector<reco::PFCandidateRef > > >(edm::InputTag("particleBasedIsolation", "gedPhotons"));
+      verticesToken = iC.consumes<std::vector<reco::Vertex >> (_vertexCollection ) ;
   }
 
   //! Destructor
-  virtual ~PhotonPFIsolationWithMapBasedVeto(){};
+  virtual ~PhotonPFIsolationWithMapBasedVeto_dzcut(){};
   
   
 private:    
-  const std::string _isolateAgainst, _vertexCollection;
+  const std::string _isolateAgainst;
   const std::vector<unsigned> _miniAODVertexCodes;
   const unsigned _vertexIndex;
+  edm::InputTag _vertexCollection;
 
   
 };
 
 DEFINE_EDM_PLUGIN(CITKIsolationConeDefinitionFactory,
-		  PhotonPFIsolationWithMapBasedVeto,
-		  "PhotonPFIsolationWithMapBasedVeto");
+		  PhotonPFIsolationWithMapBasedVeto_dzcut,
+		  "PhotonPFIsolationWithMapBasedVeto_dzcut");
 
 
 //This function defines whether particular PFCandidate is inside of isolation cone of photon or not by checking deltaR and whether footprint removal for this candidate should be done. Additionally, for miniAOD charged hadrons from the PV are considered. *** For AOD this should be done by the corresponding sequence beforehand!!! ***
  
-bool PhotonPFIsolationWithMapBasedVeto::isInIsolationCone(const reco::CandidatePtr& photon,  const reco::CandidatePtr& PFCandidate  ) const {
+bool PhotonPFIsolationWithMapBasedVeto_dzcut::isInIsolationCone(const reco::CandidatePtr& photon,  const reco::CandidatePtr& PFCandidate  ) const {
  
   //convert the photon and candidate objects to the corresponding pat or reco objects. What is used depends on what is user running on: miniAOD or AOD
   reco::recoPhotonPtr asreco_photonptr(photon);
@@ -110,6 +118,9 @@ bool PhotonPFIsolationWithMapBasedVeto::isInIsolationCone(const reco::CandidateP
   
   pat::PackedCandidatePtr aspacked(PFCandidate);
   reco::PFCandidatePtr aspf(PFCandidate);
+
+  const float dxyMax = 0.1;
+  const float dzMax  = 0.2;
 
   
   bool inFootprint = false;
@@ -125,13 +136,11 @@ bool PhotonPFIsolationWithMapBasedVeto::isInIsolationCone(const reco::CandidateP
     if( aspacked->charge() != 0 ) 
     {
       bool is_vertex_allowed = false;
-      for( const unsigned vtxtype : _miniAODVertexCodes ) 
-      {
-	     if( vtxtype == aspacked->fromPV(_vertexIndex) ) {
-	         is_vertex_allowed = true;
-	         break;
-	       }
-      }      
+      reco::Track theTrack = aspacked ->pseudoTrack(); 
+      const reco::Vertex &pv = vertices->front();   
+      float dxy = theTrack.dxy(pv.position());
+      float dz = theTrack.dz(pv.position());
+      if ( !(fabs(dz) > dzMax) && !(fabs(dxy) > dxyMax)) is_vertex_allowed = true;
     
      result *= (is_vertex_allowed);
     }
@@ -141,7 +150,7 @@ bool PhotonPFIsolationWithMapBasedVeto::isInIsolationCone(const reco::CandidateP
   
   // dealing here with recoObjects: AOD case
   else if ( aspf.get())
-  { 
+  {
       inFootprint = isInFootprint((*particleBasedIsolationMap)[photon], PFCandidate); 
       //return true if the candidate is inside the cone and not in the footprint
       result *= deltar2 < _coneSize2 && (!inFootprint);
