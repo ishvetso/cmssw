@@ -46,11 +46,26 @@ bool isInFootprint(const T& thefootprint, const U& theCandidate)
 {
     for ( auto itr = thefootprint.begin(); itr != thefootprint.end(); ++itr ) 
     {
-      if( itr->key() == theCandidate.key() ) return true;
+      //std::cout << "key1 "  << itr->key()  << " key2 " << theCandidate.key() << " key3 " << theCandidate->sourceCandidatePtr(0).key() << std::endl;
+      if( itr->key() == theCandidate.key() ) return true;// This line is commented out, because it's itroducing trouble for pfNoPileUpCandidates
+     // if( itr->key() == theCandidate->sourceCandidatePtr(0).key() ) return true;
+
     }
     return false;
 }
 
+template <class T, class U>
+bool isInFootprintAlternative(const T& thefootprint, const U& theCandidate) 
+{
+    for ( auto itr = thefootprint.begin(); itr != thefootprint.end(); ++itr ) 
+    {
+      //std::cout << "key1 "  << itr->key()  << " key2 " << theCandidate.key() << " key3 " << theCandidate->sourceCandidatePtr(0).key() << std::endl;
+      //if( itr->key() == theCandidate.key() ) return true;// This line is commented out, because it's itroducing trouble for pfNoPileUpCandidates
+      if( itr->key() == theCandidate->sourceCandidatePtr(0).key() ) return true;
+
+    }
+    return false;
+}
 
 class PhotonPFIsolationWithMapBasedVeto : public citk::IsolationConeDefinitionBase {
 public:
@@ -64,7 +79,7 @@ public:
   PhotonPFIsolationWithMapBasedVeto& operator=(const PhotonPFIsolationWithMapBasedVeto&) =delete;
 
   bool isInIsolationCone(const reco::CandidatePtr& photon,
-			 const reco::CandidatePtr& other) const override final;
+			 const reco::CandidatePtr& PFCandidate) const override final;
   
    
   // this object is needed for reco case
@@ -137,14 +152,20 @@ bool PhotonPFIsolationWithMapBasedVeto::isInIsolationCone(const reco::CandidateP
     }
      //return true if the candidate is inside the cone and not in the footprint
     result *= deltar2 < _coneSize2 && (!inFootprint);
+
+    //if(aspacked -> pdgId() == 22) std::cout << "miniAOD: " << "result " << result << " deltar2  "  << deltar2 <<  "pt "  << aspacked -> pt() << " pdgID " << aspacked -> pdgId() << " isInFootprint " << inFootprint << std::endl;
    }
   
   // dealing here with recoObjects: AOD case
-  else if ( aspf.get())
+  else if ( aspf.get() && aspf.isNonnull())
   { 
-      inFootprint = isInFootprint((*particleBasedIsolationMap)[photon], PFCandidate); 
+     inFootprint = isInFootprintAlternative((*particleBasedIsolationMap)[photon], aspf); 
+      //std::cout << " Ivan " << inFootprint << " pt "  <<  aspf -> pt() << " pdgId " << aspf -> pdgId() << " photon " << asreco_photonptr  << " particleBasedIsolationMap "<<  particleBasedIsolationMap << std::endl; 
+
       //return true if the candidate is inside the cone and not in the footprint
-      result *= deltar2 < _coneSize2 && (!inFootprint);
+      result *=  deltar2 < _coneSize2 && (!inFootprint);
+      //if (result) std::cout << "accepted " << std::endl;
+     // if(aspf -> pdgId() == 22 && deltar2 == 0) std::cout << "AOD:" << "result " << result  << " photon pt "  << asreco_photonptr -> pt()  << " eta " << asreco_photonptr -> eta()<< " deltar2  "  << deltar2 << " pt "  << aspf -> pt() << " pdgID " << aspf -> pdgId() << " isInFootprint " << inFootprint << std::endl;
   }
   
   // throw exception if it is not a patObject or recoObject
