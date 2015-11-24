@@ -9,7 +9,7 @@ options = dict()
 varOptions = VarParsing('analysis')
 varOptions.register(
     "isMC",
-    True,
+    False,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "Compute MC efficiencies"
@@ -19,8 +19,8 @@ varOptions.parseArguments()
 
 options['HLTProcessName']          = "HLT"
 options['ELECTRON_COLL']           = "slimmedElectrons"
-options['ELECTRON_CUTS']           = "(abs(superCluster.eta)<2.5) && (ecalEnergy*sin(superClusterPosition.theta)>10.0 && pt>15 && ( ( abs(superCluster().eta) < 1.4442 && full5x5_sigmaIetaIeta < 0.012 &&  hcalOverEcal < 0.09 && (ecalPFClusterIso / pt) < 0.37 &&  (hcalPFClusterIso / pt) < 0.25 && (dr03TkSumPt / pt) < 0.18 &&  abs(deltaEtaSuperClusterTrackAtVtx) < 0.0095 &&  abs(deltaPhiSuperClusterTrackAtVtx) < 0.065 ) ||  ( abs(superCluster().eta) > 1.5660 && full5x5_sigmaIetaIeta < 0.033 &&  hcalOverEcal <0.09 && (ecalPFClusterIso / pt) < 0.45 &&  (hcalPFClusterIso / pt)  < 0.28 && (dr03TkSumPt / pt) < 0.18 ) ))"
-options['ELECTRON_TAG_CUTS']       = "(abs(superCluster.eta)<=2.1) && !(1.4442<=abs(superCluster.eta)<=1.566) && pt >= 25.0 && ( ( abs(superCluster().eta) < 1.4442 && full5x5_sigmaIetaIeta < 0.012 &&  hcalOverEcal < 0.09 && (ecalPFClusterIso / pt) < 0.37 &&  (hcalPFClusterIso / pt) < 0.25 && (dr03TkSumPt / pt) < 0.18 &&  abs(deltaEtaSuperClusterTrackAtVtx) < 0.0095 &&  abs(deltaPhiSuperClusterTrackAtVtx) < 0.065 ) ||  ( abs(superCluster().eta) > 1.5660 && full5x5_sigmaIetaIeta < 0.033 &&  hcalOverEcal <0.09 && (ecalPFClusterIso / pt) < 0.45 &&  (hcalPFClusterIso / pt)  < 0.28 && (dr03TkSumPt / pt) < 0.18 ) )"
+options['ELECTRON_CUTS']           = "(abs(superCluster.eta)<2.5) && (ecalEnergy*sin(superClusterPosition.theta)>10.0)"
+options['ELECTRON_TAG_CUTS']       = "(abs(superCluster.eta)<=2.5) && !(1.4442<=abs(superCluster.eta)<=1.566) && pt >= 25.0"
 options['SUPERCLUSTER_COLL']       = "reducedEgamma:reducedSuperClusters"
 options['SUPERCLUSTER_CUTS']       = "abs(eta)<2.5 && !(1.4442< abs(eta) <1.566) && et>10.0"
 options['MAXEVENTS']               = cms.untracked.int32(-1) 
@@ -36,22 +36,22 @@ from PhysicsTools.TagAndProbe.treeMakerOptions_cfi import *
 print "isMC:", varOptions.isMC
 
 if (varOptions.isMC):
-    options['INPUT_FILE_NAME']     = "file:///afs/cern.ch/work/i/ishvetso/DY.root"
+    options['INPUT_FILE_NAME']     = "/store/mc/RunIISpring15DR74/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/Asympt50ns_MCRUN2_74_V9A-v2/00000/00C4781D-6B08-E511-8A0A-0025905A6084.root"
     options['OUTPUT_FILE_NAME']    = "TnPTree_mc.root"
-    options['TnPPATHS']            = cms.vstring("HLT_Ele22_eta2p1_WP75_Gsf_v*")#changed
-    options['TnPHLTTagFilters']    = cms.vstring("hltSingleEle22WP75GsfTrackIsoFilter")#changed
+    options['TnPPATHS']            = cms.vstring("HLT_Ele23_WP75_Gsf_v*")
+    options['TnPHLTTagFilters']    = cms.vstring("hltEle23WP75GsfTrackIsoFilter")
     options['TnPHLTProbeFilters']  = cms.vstring()
     options['HLTFILTERTOMEASURE']  = cms.vstring("")
-    options['GLOBALTAG']           = '74X_mcRun2_asymptotic_v2'
+    options['GLOBALTAG']           = 'MCRUN2_74_V9A'
     options['EVENTSToPROCESS']     = cms.untracked.VEventRange()
 else:
     options['INPUT_FILE_NAME']     = "/store/data/Run2015B/SingleElectron/MINIAOD/PromptReco-v1/000/251/244/00000/12EE24E2-8F27-E511-80D1-02163E013793.root"
     options['OUTPUT_FILE_NAME']    = "TnPTree_data.root"
-    options['TnPPATHS']            = ["HLT_Ele23_WPLoose_Gsf_v1",]
-    options['TnPHLTTagFilters']    = ["hltEle23WPLooseGsfTrackIsoFilter"]
+    options['TnPPATHS']            = ["HLT_Ele22_eta2p1_WPLoose_Gsf_v*",]
+    options['TnPHLTTagFilters']    = ["hltSingleEle22WPLooseGsfTrackIsoFilter"]
     options['TnPHLTProbeFilters']  = cms.vstring()
     options['HLTFILTERTOMEASURE']  = cms.vstring("")
-    options['GLOBALTAG']           = 'GR_P_V56'
+    options['GLOBALTAG']           = '74X_dataRun2_reMiniAOD_v0'
     options['EVENTSToPROCESS']     = cms.untracked.VEventRange()
 
 ###################################################################
