@@ -6,7 +6,7 @@ options = VarParsing('analysis')
 
 options.register(
     "isMC",
-    True,
+    False,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "Compute MC efficiencies"
@@ -14,7 +14,7 @@ options.register(
 
 options.register(
     "inputFileName",
-    "/afs/cern.ch/work/i/ishvetso/TagAndProbe/ntuples_v2/TnPTree_mc_norm.root",
+    "/afs/cern.ch/work/i/ishvetso/TagAndProbe/ntuples_v2/TnPTree_data_total.root",
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Input filename"
@@ -22,7 +22,7 @@ options.register(
 
 options.register(
     "outputFileName",
-    "fit_MC",
+    "fit_data",
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Output filename"
@@ -79,7 +79,7 @@ else:
 
 EfficiencyBins = cms.PSet(
     #probe_et = cms.vdouble( 25., 30., 35., 40., 45., 50., 60., 70., 90., 130., 180., 250. ),
-    probe_Ele_eta = cms.vdouble( -2.5, -1.5, -1.0, 0.0, 1.0, 1.5, 2.5),
+    probe_Ele_eta = cms.vdouble( -2.5, -1.5, -1.0, 0.0, 1.0, 1.5, 2.5 ),
     probe_Ele_pt = cms.vdouble(20., 30., 40., 50., 5000.),
     )
 
@@ -133,17 +133,17 @@ process.TnPMeasurement = cms.EDAnalyzer("TagProbeFitTreeAnalyzer",
                                         # each pdf needs to define "signal", "backgroundPass", "backgroundFail" pdfs, "efficiency[0.9,0,1]" 
                                         # and "signalFractionInPassing[0.9]" are used for initial values  
                                         PDFs = cms.PSet(pdfSignalPlusBackground = cms.vstring(
-            "RooCBExGaussShape::signalResPass(mass,meanP[0.2,-10.000,10.000],sigmaP[2.0,0.00,10.000],alphaP[1.13, 0.0,10.0],nP[2.8,0.000,50.000],sigmaP_2[1.93,0.500,15.00])",
-            "RooCBExGaussShape::signalResFail(mass,meanF[-0.3,-10.000,10.000],sigmaF[2.3,0.00,10.000],alphaF[0.9, 0.0,10.0],nF[1.8,0.000,10.00], sigmaF_2[2.48,0.500,20.000])",
+            "RooCBExGaussShape::signalResPass(mass,meanP[0.2,-5.000,5.000],sigmaP[2.0,0.00,10.000],alphaP[1.13, 0.0,10.0],nP[2.8,0.000,50.000],sigmaP_2[1.93,0.500,15.00])",
+            "RooCBExGaussShape::signalResFail(mass,meanF[-0.3,-5.000,5.000],sigmaF[2.3,0.00,10.000],alphaF[0.9, 0.0,10.0],nF[1.8,0.000,10.00], sigmaF_2[2.48,0.500,20.000])",
             "ZGeneratorLineShape::signalPhy(mass)", 
-            #"RooCMSShape::backgroundPass(mass, alphaPass[60.,50.,70.], betaPass[0.001, 0.,0.1], gammaPass[0.1, 0, 1], peakPass[90.0])",
-            #"RooCMSShape::backgroundFail(mass, alphaFail[60.,50.,70.], betaFail[0.001, 0.,0.1], gammaFail[0.1, 0, 1], peakFail[90.0])",
-            "RooExponential::backgroundPass(mass, aPass[-0.1, -1., 0])",
-            "RooExponential::backgroundFail(mass, aPass[-0.1, -1., 0])",
+            "RooCMSShape::backgroundPass(mass, alphaPass[60.,50.,70.], betaPass[0.001, 0.,0.1], gammaPass[0.1, 0, 1], peakPass[90.0])",
+            "RooCMSShape::backgroundFail(mass, alphaFail[60.,50.,70.], betaFail[0.001, 0.,0.1], gammaFail[0.03, 0, 1], peakFail[90.0])",
+            #"RooExponential::backgroundPass(mass, aPass[-0.03., -1., 0])",
+            #"RooExponential::backgroundFail(mass, aPass[-0.03., -1., 0])",
             "FCONV::signalPass(mass, signalPhy, signalResPass)",
             "FCONV::signalFail(mass, signalPhy, signalResFail)",     
             "efficiency[0.5,0,1]",
-            "signalFractionInPassing[1.0]"     
+            "signalFractionInPassing[0.9]"     
             ),
                                                         ),
                                         
@@ -180,4 +180,4 @@ else:
 process.fit = cms.Path(
     process.TnPMeasurement  
     )
-
+i

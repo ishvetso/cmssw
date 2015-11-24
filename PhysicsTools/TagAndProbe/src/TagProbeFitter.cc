@@ -67,7 +67,7 @@ TagProbeFitter::TagProbeFitter(const std::vector<std::string>& inputFileNames, s
   gStyle->SetTitleFillColor(0);
   gStyle->SetPalette(1);
   gStyle->SetOptStat(0);
-  gStyle->SetPaintTextFormat(".2f");
+  gStyle->SetPaintTextFormat("0.1000f");
 
   quiet = false;
   binnedFit = false;
@@ -471,9 +471,21 @@ void TagProbeFitter::doFitEfficiency(RooWorkspace* w, string pdfName, RooRealVar
 
   efficiency.setVal(e->getVal());
   Double_t errLo = e->getErrorLo(), errHi = e->getErrorHi();
-  if (errLo == 0 && e->getVal() < 0.5) errLo = e->getMin()-e->getVal();
-  if (errHi == 0 && e->getVal() > 0.5) errHi = e->getMax()-e->getVal();
-  efficiency.setAsymError(errLo, errHi);
+
+  if (errLo == 0 or errHi == 0) {
+    float numSignal = ((RooRealVar*) res->floatParsFinal().find("numSignalAll"))->getVal();
+    float pass = numSignal*e->getVal();
+    float fail = numSignal*(1-e->getVal());
+
+    // Use Clopper-Pearson                                                                                                                                                                         
+    double alpha = (1.0 - .68540158589942957)/2;
+    double lo = (pass == 0) ? 0.0 : ROOT::Math::beta_quantile(   alpha, pass,   fail+1 );
+    double hi = (fail == 0) ? 1.0 : ROOT::Math::beta_quantile( 1-alpha, pass+1, fail   );
+
+    efficiency.setAsymError(lo-e->getVal(), hi-e->getVal());
+  } else {
+    efficiency.setAsymError(errLo, errHi);
+  }
   
   if (totPassing * totFailing == 0) {
     RooRealVar* nS = (RooRealVar*) res->floatParsFinal().find("numSignalAll");
@@ -700,6 +712,7 @@ void TagProbeFitter::saveDistributionsPlot(RooWorkspace* w) {
 }
 
 void TagProbeFitter::saveEfficiencyPlots(RooDataSet& eff, const TString& effName, RooArgSet& binnedVariables, RooArgSet& mappedCategories){
+
   TIterator* v1it = binnedVariables.createIterator();
   for(RooRealVar* v1 = (RooRealVar*)v1it->Next(); v1!=0; v1 = (RooRealVar*)v1it->Next() ){
     RooArgSet binCategories1D;
@@ -804,8 +817,9 @@ void TagProbeFitter::makeEfficiencyPlot1D(RooDataSet& eff, RooRealVar& v, const 
 
 void TagProbeFitter::makeEfficiencyPlot2D(RooDataSet& eff, RooRealVar& v1, RooRealVar& v2, const TString& plotName, const TString& plotTitle, const TString& effName){
   
-  TCanvas canvas(plotName);
+  TCanvas canvas(plotName, plotName, 1200., 1000.);
   canvas.SetRightMargin(0.15);
+  canvas.SetLogy();
   TH2F* h = new TH2F(plotName, plotName, v1.getBinning().numBins(), v1.getBinning().array(), v2.getBinning().numBins(), v2.getBinning().array());
   const RooArgSet* set = eff.get();
   RooRealVar* e = (RooRealVar*) set->find("efficiency");

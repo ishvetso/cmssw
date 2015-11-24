@@ -1,4 +1,5 @@
 import ROOT
+import os
 from optparse import OptionParser
 import sys
 
@@ -53,7 +54,9 @@ def main(options):
             obj.Draw()
             innername = innername.replace("&", "")            
             plotname = innername + ".png"
-            obj.SaveAs(plotname)
+            if not os.path.exists(options.output):
+                os.makedirs(options.output)
+            obj.SaveAs(options.output + "/" + plotname)
 
     if (options.dumpPlots and not options.cc):
         ROOT.gDirectory.cd("../")
@@ -70,7 +73,9 @@ def main(options):
             #plotname = plotname.replace("probe_sc_", "")
             plotname = plotname.replace("&", "")
             plotname = plotname.replace("__pdfSignalPlusBackground", "")
-            c.SaveAs(plotname)
+            if not os.path.exists(options.output):
+                os.makedirs(options.output)
+            c.SaveAs(options.output + "/" + plotname)
             ROOT.gDirectory.cd("../")
 
 if (__name__ == "__main__"):
@@ -81,6 +86,7 @@ if (__name__ == "__main__"):
     parser.add_option("-b", dest="batch", action="store_true", help="ROOT batch mode", default=False)
     parser.add_option("-m", "--name", help="Subdirectory with results", default="xxx")
     parser.add_option("-p", "--dump-plot", dest="dumpPlots", action="store_true", help="Dump fit plots", default=False)
+    parser.add_option("-o", "--output", help="Subdirectory for output", default="")
 
     (options, arg) = parser.parse_args()
 

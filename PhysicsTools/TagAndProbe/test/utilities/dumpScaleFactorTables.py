@@ -1,19 +1,28 @@
 import ROOT
 import math
 from optparse import OptionParser
+import copy
 
 def makeTable(hnum, hden, tablefilename):
     nX = hnum.GetNbinsX()
     nY = hnum.GetNbinsY()
+    c = ROOT.TCanvas()
+    c.SetLogx()
   
     f = open(tablefilename, "w+")
-  
+    f.write("\\begin{tabular}{|c|c|c|c|c|c|c|c|}\n")
+    f.write("\\hline\n")
+    f.write("$p_{T,min}$ & $p_{T,max}$  & $\\eta_{min}$ & $\\eta_{max}$ & eff Data & effMC & scale factor & uncertainty \\\\ \n\\hline \n")
+    hist = copy.copy(hnum)
+    hist.Divide(hden)
     for i in xrange(1, nX+1):
         pT0 = hnum.GetXaxis().GetBinLowEdge(i)
         pT1 = hnum.GetXaxis().GetBinLowEdge(i+1)
     
         for j in xrange(1, nY+1):
             x = hnum.GetBinContent(i,j)/hden.GetBinContent(i,j)
+            effData = hnum.GetBinContent(i,j)
+            effMC = hden.GetBinContent(i,j)
             dx1 = hnum.GetBinError(i,j)/hnum.GetBinContent(i,j)
             dx2 = hden.GetBinError(i,j)/hden.GetBinContent(i,j)
             dx = math.sqrt(dx1*dx1+dx2*dx2)*x
@@ -21,10 +30,16 @@ def makeTable(hnum, hden, tablefilename):
             print dx1, dx2, dx
             eta0 = hnum.GetYaxis().GetBinLowEdge(j)
             eta1 = hnum.GetYaxis().GetBinLowEdge(j+1)
+            hist.SetBinError(i,j,dx)
             
-            f.write("%4.1f  %4.1f   %+6.4f   %+6.4f  %6.4f   %6.4f \n"%(pT0, pT1, eta0, eta1, x, dx))
-            
+            f.write("%4.1f &  %4.1f &  %+6.4f & %+6.4f & %6.4f &  %6.4f & %6.4f &  %6.4f \\\\ \n"%(pT0, pT1, eta0, eta1, effData, effMC ,x, dx))
+            f.write("\\hline\n")
+    f.write("\\end{tabular}\n")       
     f.close()
+
+    ROOT.gStyle.SetPaintTextFormat("4.2f")
+    hist.Draw()
+    c.SaveAs("test.png")
 
 def main(options):
     fData = ROOT.TFile(options.data)
