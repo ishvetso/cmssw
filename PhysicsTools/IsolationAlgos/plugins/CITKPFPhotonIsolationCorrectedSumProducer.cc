@@ -1,5 +1,5 @@
-#ifndef PhysicsTools_IsolationAlgos_CITKIsolationSumProducer_H
-#define PhysicsTools_IsolationAlgos_CITKIsolationSumProducer_H
+#ifndef PhysicsTools_IsolationAlgos_CITKIsolationCorrectedSumProducer_H
+#define PhysicsTools_IsolationAlgos_CITKIsolationCorrectedSumProducer_H
 
 #include "FWCore/Framework/interface/EDProducer.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
@@ -21,6 +21,7 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/EventSetup.h"
+#include "DataFormats/EgammaCandidates/interface/Photon.h"
 
 #include <string>
 #include <unordered_map>
@@ -28,13 +29,36 @@
 namespace edm { class Event; }
 namespace edm { class EventSetup; }
 
+namespace reco {
+  typedef edm::Ptr<reco::Photon> recoPhotonPtr;
+}
+
+double kappa (double eta){
+  double value;
+  if (std::abs(eta) < 2.) value = 4.5*10e-3;
+  else value = 3.*10e-3;
+  return value; 
+}
+
+double Area(double eta){
+  double value;
+  if (std::abs(eta) < 0.9 ) value = 0.17;
+  else if ( 0.9 <= std::abs(eta) < 1.4442) value = 0.14;
+  else if ( 1.566 < std::abs(eta) < 2.0 ) value = 0.11;
+  else if ( 2.0 <= std::abs(eta) < 2.2 ) value = 0.14;
+  else if ( std::abs(eta) >= 2.2 ) value = 0.22;
+  else value = 0.;
+
+  return value;
+}
+
 namespace citk {
-  class PFIsolationSumProducer : public edm::EDProducer {
+  class PFIsolationCorrectedSumProducer : public edm::EDProducer {
     
   public:  
-    PFIsolationSumProducer(const edm::ParameterSet&);
+    PFIsolationCorrectedSumProducer(const edm::ParameterSet&);
     
-    virtual ~PFIsolationSumProducer() {}
+    virtual ~PFIsolationCorrectedSumProducer() {}
     
     void beginLuminosityBlock(const edm::LuminosityBlock&,
 			      const edm::EventSetup&) override final;
@@ -49,18 +73,19 @@ namespace citk {
     typedef edm::View<reco::Candidate> CandView;
     const TypeMap _typeMap;
     edm::EDGetTokenT<CandView> _to_isolate, _isolate_with;
+    edm::EDGetTokenT<double> _rho;
     // indexed by pf candidate type
     std::array<IsoTypes,kNPFTypes> _isolation_types; 
     std::array<std::vector<std::string>,kNPFTypes> _product_names;
   };
 }
 
-typedef citk::PFIsolationSumProducer CITKPFIsolationSumProducer;
+typedef citk::PFIsolationCorrectedSumProducer CITKPFIsolationCorrectedSumProducer;
 
-DEFINE_FWK_MODULE(CITKPFIsolationSumProducer);
+DEFINE_FWK_MODULE(CITKPFIsolationCorrectedSumProducer);
 
 namespace citk {
-  PFIsolationSumProducer::PFIsolationSumProducer(const edm::ParameterSet& c) :
+  PFIsolationCorrectedSumProducer::PFIsolationCorrectedSumProducer(const edm::ParameterSet& c) :
     _typeMap( { {"h+",1},
 	        {"h0",5},
 		{"gamma",4},
@@ -72,6 +97,7 @@ namespace citk {
       consumes<CandView>(c.getParameter<edm::InputTag>("srcToIsolate"));
     _isolate_with = 
       consumes<CandView>(c.getParameter<edm::InputTag>("srcForIsolationCone"));
+      _rho = consumes<double>(c.getParameter<edm::InputTag>("rho"));
     const std::vector<edm::ParameterSet>& isoDefs = 
       c.getParameterSetVector("isolationConeDefinitions");
     for( const auto& isodef : isoDefs ) {
@@ -95,6 +121,7 @@ namespace citk {
 	  << "list of allowed isolations!.";
       }
       _isolation_types[thetype->second].emplace_back(theisolator);
+      //std::cout << thetype->second << std::endl;
       const std::string dash("-");
       std::string pname = isotype+dash+coneName+dash+theisolator->additionalCode();
       _product_names[thetype->second].emplace_back(pname);
@@ -102,7 +129,7 @@ namespace citk {
     }
   }
 
-  void  PFIsolationSumProducer::
+  void  PFIsolationCorrectedSumProducer::
   beginLuminosityBlock(const edm::LuminosityBlock&,
 		       const edm::EventSetup& es) {
     for( const auto& isolators_for_type : _isolation_types ) {
@@ -112,14 +139,16 @@ namespace citk {
     }
   }
 
-  void  PFIsolationSumProducer::
+  void  PFIsolationCorrectedSumProducer::
   produce(edm::Event& ev, const edm::EventSetup& es) {
     typedef std::auto_ptr<edm::ValueMap<float> >  product_type;
     typedef std::vector<float> product_values;
     edm::Handle<CandView> to_isolate;
     edm::Handle<CandView> isolate_with;
+    edm::Handle<double> rho;
     ev.getByToken(_to_isolate,to_isolate);
     ev.getByToken(_isolate_with,isolate_with);
+    ev.getByToken(_rho,rho);
     // the list of value vectors indexed as "to_isolate"
     std::array<std::vector<product_values>,kNPFTypes> the_values;    
     // get extra event info and setup value cache
@@ -134,6 +163,10 @@ namespace citk {
     // loop over the candidates we are isolating and fill the values
     for( size_t c = 0; c < to_isolate->size(); ++c ) {
       auto cand_to_isolate = to_isolate->ptrAt(c);
+      reco::recoPhotonPtr asPhotonPtr(cand_to_isolate); // need this for correction of photon isolation
+      if (!asPhotonPtr) throw cms::Exception("InvalidIsolationType") << "this module is defined explicitly for photons." << std::endl;
+      double photon_eta =  asPhotonPtr -> superCluster()->seed() -> eta();
+      double photon_pt = asPhotonPtr -> pt();
       std::array<std::vector<float>,kNPFTypes> cand_values;      
       unsigned k = 0;
       for( const auto& isolators_for_type : _isolation_types ) {
@@ -145,6 +178,7 @@ namespace citk {
         auto isocand = isolate_with->ptrAt(ic);
 	auto isotype = helper.translatePdgIdToType(isocand->pdgId());	
 	const auto& isolations = _isolation_types[isotype];	
+  //std::cout << "type : "<< isotype << " size : "<< isolations.size() << std::endl;
 	for( unsigned i = 0; i < isolations.size(); ++ i  ) {
 	  if( isolations[i]->isInIsolationCone(cand_to_isolate,isocand) ) {
 	    cand_values[isotype][i] += isocand->pt();
@@ -153,8 +187,13 @@ namespace citk {
       }
       // add this candidate to isolation value list
       for( unsigned i = 0; i < kNPFTypes; ++i ) {
+        //std::cout << "cand values size : " << cand_values[i].size() << std::endl;
 	for( unsigned j = 0; j < cand_values[i].size(); ++j ) {
-	  the_values[i][j].push_back(cand_values[i][j]);
+    //if this is not a photon isolation things remain as asual
+	  if (i != 4) the_values[i][j].push_back(cand_values[i][j]);
+    else {
+      the_values[i][j].push_back(2.5 + cand_values[i][j] - (*rho)*Area(photon_eta) - kappa(photon_eta)*photon_pt );
+    }
 	}
       }
     }
