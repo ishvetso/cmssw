@@ -28,11 +28,10 @@
 
 namespace edm { class Event; }
 namespace edm { class EventSetup; }
-//nohting
+
 namespace reco {
   typedef edm::Ptr<reco::Photon> recoPhotonPtr;
 }
-nothing
 double kappa (double eta){
   double value;
   if (std::abs(eta) < 2.) value = 4.5*10e-3;
