@@ -28,7 +28,9 @@
 
 
 #include <unordered_map>
-
+//
+//corrected isolation in CITK
+//
 namespace reco {
   typedef edm::Ptr<reco::Photon> recoPhotonPtr;
 }
