@@ -24,6 +24,11 @@
 #include "CommonTools/Utils/interface/StringCutObjectSelector.h"
 #include "CommonTools/Utils/interface/StringObjectFunction.h"
 
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h" 
+
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+
 #include <TTree.h>
 #include <TH1F.h>
 #include <boost/utility.hpp>
@@ -158,6 +163,8 @@ class BaseTreeFiller : boost::noncopyable {
         /// Write a string dump of this PSet into the TTree header.
         /// see macro in test directory for how to retrieve it from the output root file
         void writeProvenance(const edm::ParameterSet &pset) const ;
+	void addTotWeightBranch(double totGenWeight, double totEvents);
+
     protected:
 
         std::vector<ProbeVariable> vars_;
@@ -171,7 +178,7 @@ class BaseTreeFiller : boost::noncopyable {
         edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
         edm::EDGetTokenT<pat::METCollection> pfmetToken_;
 	edm::EDGetTokenT<double> rhoToken_;
-
+        edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken_;
 	edm::InputTag PUweightSrc_;
 	bool storePUweight_;
 
@@ -188,14 +195,17 @@ class BaseTreeFiller : boost::noncopyable {
 	bool saveRho_;
         void addBranches_(TTree *tree, const edm::ParameterSet &iConfig, edm::ConsumesCollector & iC, const std::string &branchNamePrefix="") ;
 
+	edm::Service<TFileService> fs;
+
         //implementation notice: these two are 'mutable' because we will fill them from a 'const' method
         mutable TTree * tree_;
-        mutable float weight_;
+        mutable double weight_;
         mutable uint32_t run_, lumi_, mNPV_;
         mutable uint64_t event_;
-	mutable float PUweight_;
+	mutable double PUweight_;
 	mutable std::vector<std::string> weightsToCombine_;
-	mutable float totWeight_;
+	mutable double totWeight_;
+	mutable int truePU_;
 	
         mutable float mPVx_,mPVy_,mPVz_,mBSx_,mBSy_,mBSz_;
 	mutable float mpfMET_,mpfSumET_,mpfPhi_;

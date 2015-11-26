@@ -25,10 +25,13 @@ ProbeVariablesToStore = cms.PSet(
     probe_sc_abseta = cms.string("abs(superCluster.eta)"),
 
 #id based
+    probe_Pho_full5x5x_r9   = cms.string("full5x5_r9"),
+    probe_Pho_r9            = cms.string("r9"),
     probe_Pho_sigmaIEtaIEta = cms.string("full5x5_sigmaIetaIeta"),
     probe_Pho_ESsigma       = cms.InputTag("photonIDValueMapProducer:phoESEffSigmaRR"),
     probe_Pho_sigmaIEtaIPhi = cms.InputTag("photonIDValueMapProducer:phoFull5x5SigmaIEtaIPhi"),
     probe_Pho_hoe           = cms.string("hadronicOverEm"),
+    probe_Pho_mva           = cms.InputTag("photonFromDiPhotons:idmva"),
 
 #iso
     probe_Pho_chIso    = cms.InputTag("photonIDValueMapProducer:phoChargedIsolation"),
@@ -49,6 +52,9 @@ TagVariablesToStore = cms.PSet(
     sc_et     = cms.string("superCluster.energy*sin(superCluster.position.theta)"),    
     sc_eta    = cms.string("superCluster.eta"),
     sc_abseta = cms.string("abs(superCluster.eta)"),
+    Pho_mva   = cms.InputTag("photonFromDiPhotons:idmva"),
+    Pho_full5x5x_r9   = cms.string("full5x5_r9"),
+    Pho_r9            = cms.string("r9"),
 )
 
 CommonStuffForPhotonProbe = cms.PSet(

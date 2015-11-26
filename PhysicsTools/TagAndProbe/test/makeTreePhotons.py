@@ -106,8 +106,8 @@ process.allTagsAndProbes *= process.tagTightRECO
 
 process.mc_sequence = cms.Sequence()
 
-if (varOptions.isMC):
-    process.mc_sequence *= (process.McMatchTag + process.McMatchRECO)
+#if (varOptions.isMC):
+#    process.mc_sequence *= (process.McMatchTag + process.McMatchRECO)
 
 ##########################################################################
 ## TREE MAKER OPTIONS
@@ -129,11 +129,11 @@ process.PhotonToRECO = cms.EDAnalyzer("TagProbeFitTreeProducer",
                                       )
 
 if (varOptions.isMC):
-    process.PhotonToRECO.probeMatches  = cms.InputTag("McMatchRECO")
+    #process.PhotonToRECO.probeMatches  = cms.InputTag("McMatchRECO")
     process.PhotonToRECO.eventWeight   = cms.InputTag("generator")
     process.PhotonToRECO.PUWeightSrc   = cms.InputTag("pileupReweightingProducer","pileupWeights")
-    process.PhotonToRECO.variables.Pho_dRTau  = cms.InputTag("GsfDRToNearestTauProbe")
-    process.PhotonToRECO.tagVariables.probe_dRTau    = cms.InputTag("GsfDRToNearestTauProbe")
+    #process.PhotonToRECO.variables.Pho_dRTau  = cms.InputTag("GsfDRToNearestTauProbe")
+    #process.PhotonToRECO.tagVariables.probe_dRTau    = cms.InputTag("GsfDRToNearestTauProbe")
 
 process.tree_sequence = cms.Sequence(process.PhotonToRECO)
 
@@ -157,8 +157,8 @@ if (varOptions.isMC):
         process.allTagsAndProbes +
         process.pileupReweightingProducer +
         process.mc_sequence + 
-        process.GsfDRToNearestTauProbe + 
-        process.GsfDRToNearestTauTag + 
+        #process.GsfDRToNearestTauProbe + 
+        #process.GsfDRToNearestTauTag + 
         process.tree_sequence
         )
 else:

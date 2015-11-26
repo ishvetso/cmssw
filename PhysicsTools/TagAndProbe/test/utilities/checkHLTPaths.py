@@ -24,13 +24,14 @@ events = Events(sys.argv[1])
 for iev,event in enumerate(events):
     event.getByLabel(triggerBitLabel, triggerBits)
     event.getByLabel(triggerObjectLabel, triggerObjects)
-    event.getByLabel(triggerPrescaleLabel, triggerPrescales)
+    #event.getByLabel(triggerPrescaleLabel, triggerPrescales)
 
     print "\nEvent %d: run %6d, lumi %4d, event %12d" % (iev,event.eventAuxiliary().run(), event.eventAuxiliary().luminosityBlock(),event.eventAuxiliary().event())
     print "\n === TRIGGER PATHS ==="
     names = event.object().triggerNames(triggerBits.product())
     for i in xrange(triggerBits.product().size()):
-        print "Trigger ", names.triggerName(i), ", prescale ", triggerPrescales.product().getPrescaleForIndex(i), ": ", ("PASS" if triggerBits.product().accept(i) else "fail (or not run)") 
+        #print "Trigger ", names.triggerName(i), ", prescale ", triggerPrescales.product().getPrescaleForIndex(i), ": ", ("PASS" if triggerBits.product().accept(i) else "fail (or not run)") 
+        print "Trigger ", names.triggerName(i), ": ", ("PASS" if triggerBits.product().accept(i) else "fail (or not run)") 
 
     print "\n === TRIGGER OBJECTS ==="
     for j,to in enumerate(triggerObjects.product()):

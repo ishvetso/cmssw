@@ -125,8 +125,8 @@ process.allTagsAndProbes *= process.tagTightRECO
 
 process.mc_sequence = cms.Sequence()
 
-if (varOptions.isMC):
-    process.mc_sequence *= (process.McMatchTag + process.McMatchSC)
+#if (varOptions.isMC):
+#    process.mc_sequence *= (process.McMatchTag + process.McMatchSC)
 
 ##########################################################################
 ## TREE MAKER OPTIONS
@@ -150,11 +150,11 @@ process.GsfElectronToSC = cms.EDAnalyzer("TagProbeFitTreeProducer",
                                          )
 
 if (varOptions.isMC):
-    process.GsfElectronToSC.probeMatches  = cms.InputTag("McMatchSC")
+    #process.GsfElectronToSC.probeMatches  = cms.InputTag("McMatchSC")
     process.GsfElectronToSC.eventWeight   = cms.InputTag("generator")
     process.GsfElectronToSC.PUWeightSrc   = cms.InputTag("pileupReweightingProducer","pileupWeights")
-    process.GsfElectronToSC.variables.probe_dRTau = cms.InputTag("GsfDRToNearestTauSC")
-    process.GsfElectronToSC.tagVariables.Ele_dRTau = cms.InputTag("GsfDRToNearestTauTag")
+    #process.GsfElectronToSC.variables.probe_dRTau = cms.InputTag("GsfDRToNearestTauSC")
+    #process.GsfElectronToSC.tagVariables.Ele_dRTau = cms.InputTag("GsfDRToNearestTauTag")
 
 ##########################################################################
 ## PATHS
@@ -178,9 +178,9 @@ if (varOptions.isMC):
         process.pileupReweightingProducer +
         process.mc_sequence +
         process.eleVarHelper +
-        process.GsfDRToNearestTauProbe + 
-        process.GsfDRToNearestTauTag + 
-        process.GsfDRToNearestTauSC + 
+        #process.GsfDRToNearestTauProbe + 
+        #process.GsfDRToNearestTauTag + 
+        #process.GsfDRToNearestTauSC + 
         process.GsfElectronToSC
         )
 else:

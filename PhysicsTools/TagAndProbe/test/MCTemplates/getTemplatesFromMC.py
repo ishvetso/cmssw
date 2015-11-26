@@ -1,6 +1,13 @@
 import ROOT
 from optparse import OptionParser
 
+def removeNegativeBins(h):
+    for i in xrange(h.GetNbinsX()):
+        if (h.GetBinContent(i) < 0):
+            h.SetBinContent(i, 0)
+    
+    
+
 def findBins(array, var):
     size = len(array)
     bin = "dump";
@@ -40,14 +47,28 @@ def main(options):
             
             #binning = options.tagTauVarName+" > 0.2 && "+options.probeTauVarName+" > 0.2 && mcTrue == 1 && pair_mass60to120 && "+options.etVarName +">"+str(pts[binVar1])+" && "+options.etVarName +"<"+str(pts[binVar1+1])+" && "+options.etaVarName +">"+str(etas[binVar2])+" && "+options.etaVarName +"<"+str(etas[binVar2+1])            
             binning = "mcTrue == 1 && pair_mass60to120 && "+options.var1Name +">"+str(var1s[binVar1])+" && "+options.var1Name +"<"+str(var1s[binVar1+1])+" && "+options.var2Name +">"+str(var2s[binVar2])+" && "+options.var2Name +"<"+str(var2s[binVar2+1])            
-            cuts = "(" + binning + " && "+options.idprobe+"==1"+")*"+options.weightVarName
+
+            cuts = "("
+            if (options.addProbeCut != ""):
+                cuts = cuts + options.addProbeCut + " && "
+            cuts = cuts + binning + " && "+options.idprobe+"==1"+")*"+options.weightVarName
             fChain.Draw("mass>>"+histos[hp].GetName(), cuts, "goff")
-            cuts = "(" + binning + " && "+options.idprobe+"==0"+")*"+options.weightVarName
+            #print cuts
+            
+            cuts = "("
+            if (options.addProbeCut != ""):
+                cuts = cuts + options.addProbeCut + " && "
+            cuts = cuts + binning + " && "+options.idprobe+"==0"+")*"+options.weightVarName
             fChain.Draw("mass>>"+histos[hf].GetName(), cuts, "goff")
+            #print cuts
+
+            removeNegativeBins(histos[hp])
+            removeNegativeBins(histos[hf])
 
             hpassInt = histos[hp].Integral()
             hfailInt = histos[hf].Integral()
-            print hpassInt, hfailInt, hpassInt/(hpassInt+hfailInt)
+            
+            print "%.2f %.2f %1.4f"%(hpassInt, hfailInt, hpassInt/(hpassInt+hfailInt))
     
     outFile = ROOT.TFile(options.output, "RECREATE")
     for k in histos:
@@ -65,9 +86,10 @@ if __name__ == "__main__":
     parser.add_option("", "--var2Bins", default="0.0,1.0,1.4442,1.566,2.0,2.5", help="Binning to use in var2")
     parser.add_option("", "--var1Name", default="probe_sc_eta", help="Variable1 branch name")
     parser.add_option("", "--var2Name", default="probe_sc_et", help="Variable2 branch name")
+    parser.add_option("", "--addProbeCut", default="", help="Additional cut on the probe")
     parser.add_option("", "--weightVarName", default="totWeight", help="Weight variable branch name")
-    parser.add_option("", "--tagTauVarName", default="Ele_dRTau", help="Tag to tau dr variable branch name")
-    parser.add_option("", "--probeTauVarName", default="probe_dRTau", help="Tag to tau dr variable branch name")
+    #parser.add_option("", "--tagTauVarName", default="", help="Tag to tau dr variable branch name")
+    #parser.add_option("", "--probeTauVarName", default="", help="Tag to tau dr variable branch name")
 
     (options, arg) = parser.parse_args()
      

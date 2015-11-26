@@ -20,13 +20,13 @@ def makeTable(h, tablefilename):
             eta0 = h.GetYaxis().GetBinLowEdge(j)
             eta1 = h.GetYaxis().GetBinLowEdge(j+1)
       
-            f.write("%4.1f  %4.1f   %+6.4f   %+6.4f  %6.4f   %6.4f \n" %(pT0, pT1, eta0, eta1, x, dx))
+            f.write("%4.2f  %4.2f   %+6.4f   %+6.4f  %6.4f   %6.4f \n" %(pT0, pT1, eta0, eta1, x, dx))
   
     f.close()
 
 
 def main(options):
-
+    ROOT.gStyle.SetPaintTextFormat("1.4f")
     print "##################################################   "
     f = ROOT.TFile(options.input)
     f.cd(options.directory+"/"+options.name)
