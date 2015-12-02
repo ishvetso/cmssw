@@ -60,7 +60,6 @@ tnp::BaseTreeFiller::BaseTreeFiller(const char *name, const edm::ParameterSet& i
   pileupInfoToken_ = iC.consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("pileupInfoTag"));
   addRunLumiInfo_ = iConfig.existsAs<bool>("addRunLumiInfo") ? iConfig.getParameter<bool>("addRunLumiInfo") : false;
   if (addRunLumiInfo_) {
-    std::cout << "iC.consumes" << std::endl;
     tree_->Branch("run",  &run_,  "run/i");
     tree_->Branch("lumi", &lumi_, "lumi/i");
     tree_->Branch("event", &event_, "event/l");
@@ -105,7 +104,6 @@ tnp::BaseTreeFiller::BaseTreeFiller(BaseTreeFiller &main, const edm::ParameterSe
   addEventVariablesInfo_(false),
   tree_(0)
 {
-  std::cout << "ECCOMI" << std::endl;
   addBranches_(main.tree_, iConfig, iC, branchNamePrefix);
 }
 

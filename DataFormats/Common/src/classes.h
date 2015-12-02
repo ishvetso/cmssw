@@ -28,6 +28,8 @@
 #include "DataFormats/Common/interface/SecondaryEventIDAndFileInfo.h"
 #include "DataFormats/Provenance/interface/EventAuxiliary.h"
 #include "FWCore/MessageLogger/interface/ErrorSummaryEntry.h"
+#include "DataFormats/Common/interface/MergeableDouble.h"
+#include "DataFormats/Common/interface/MergeableHisto.h"
 
 #include <vector>
 
@@ -72,5 +74,10 @@ namespace DataFormats_Common {
     edm::Wrapper<edm::ConditionsInLumiBlock> dum11;
     edm::Wrapper<edm::ConditionsInRunBlock> dum21;
     edm::Wrapper<edm::ConditionsInEventBlock> dum31;
+
+    edm::Wrapper<edm::MergeableDouble> md;
+    edm::Wrapper<edm::MergeableHistoD> mhD;
+    edm::Wrapper<edm::MergeableHistoF> mhF;
+    edm::Wrapper<edm::MergeableHistoI> mhI;   
   };
 }

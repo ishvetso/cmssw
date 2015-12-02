@@ -153,9 +153,7 @@ if (varOptions.isMC):
     process.GsfElectronToTrigger.eventWeight   = cms.InputTag("generator")
     process.GsfElectronToTrigger.PUWeightSrc   = cms.InputTag("pileupReweightingProducer","pileupWeights")
     #process.GsfElectronToTrigger.variables.probe_dRTau = cms.InputTag("GsfDRToNearestTauSC")
-    #process.GsfElectronToTrigger.tagVariables.Ele_dRTau = cms.InputTag("GsfDRToNearestTauTag")
-    print process.GsfElectronToTrigger.dumpPython()
-    
+    #process.GsfElectronToTrigger.tagVariables.Ele_dRTau = cms.InputTag("GsfDRToNearestTauTag")    
 
 process.GsfElectronToSC = cms.EDAnalyzer("TagProbeFitTreeProducer",
                                          CommonStuffForSuperClusterProbe, mcTruthCommonStuff,
