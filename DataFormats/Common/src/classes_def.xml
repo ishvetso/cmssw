@@ -147,6 +147,8 @@
  <class name="edm::Wrapper<edm::MergeableHistoF>"/>
  <class name="edm::MergeableHistoI"/>
  <class name="edm::Wrapper<edm::MergeableHistoI>"/>
+
+
  <class name="edm::ConditionsInEventBlock" ClassVersion="10">
   <version ClassVersion="10" checksum="28865621"/>
  </class>
