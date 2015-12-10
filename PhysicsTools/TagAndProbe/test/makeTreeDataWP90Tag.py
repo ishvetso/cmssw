@@ -9,7 +9,7 @@ options = dict()
 varOptions = VarParsing('analysis')
 varOptions.register(
     "isMC",
-    True,
+    False,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "Compute MC efficiencies"
@@ -19,8 +19,8 @@ varOptions.parseArguments()
 
 options['HLTProcessName']          = "HLT"
 options['ELECTRON_COLL']           = "slimmedElectrons"
-options['ELECTRON_CUTS']           = "(abs(superCluster.eta)<2.5) && pt>15.0 && ( ( abs(superCluster().eta) < 1.4442 && full5x5_sigmaIetaIeta < 0.012 &&  hcalOverEcal < 0.09 && (ecalPFClusterIso / pt) < 0.37 &&  (hcalPFClusterIso / pt) < 0.25 && (dr03TkSumPt / pt) < 0.18 &&  abs(deltaEtaSuperClusterTrackAtVtx) < 0.0095 &&  abs(deltaPhiSuperClusterTrackAtVtx) < 0.065 ) || ( abs(superCluster().eta) > 1.5660 && full5x5_sigmaIetaIeta < 0.033 &&  hcalOverEcal <0.09 && (ecalPFClusterIso / pt) < 0.45 &&  (hcalPFClusterIso / pt)  < 0.28 && (dr03TkSumPt / pt) < 0.18 ) ) "
-options['ELECTRON_TAG_CUTS']       = "(abs(superCluster.eta)<2.1) && pt>25.0 && ( ( abs(superCluster().eta) < 1.4442 && full5x5_sigmaIetaIeta < 0.012 &&  hcalOverEcal < 0.09 && (ecalPFClusterIso / pt) < 0.37 &&  (hcalPFClusterIso / pt) < 0.25 && (dr03TkSumPt / pt) < 0.18 &&  abs(deltaEtaSuperClusterTrackAtVtx) < 0.0095 &&  abs(deltaPhiSuperClusterTrackAtVtx) < 0.065 ) || ( abs(superCluster().eta) > 1.5660 && full5x5_sigmaIetaIeta < 0.033 &&  hcalOverEcal <0.09 && (ecalPFClusterIso / pt) < 0.45 &&  (hcalPFClusterIso / pt)  < 0.28 && (dr03TkSumPt / pt) < 0.18 ) ) "
+options['ELECTRON_CUTS']           = "(abs(superCluster.eta)<2.5) && pt>15.0 && ( ( abs(superCluster().eta) < 1.4442 && full5x5_sigmaIetaIeta < 0.012 &&  hcalOverEcal < 0.09 && (ecalPFClusterIso / pt) < 0.37 &&  (hcalPFClusterIso / pt) < 0.25 && (dr03TkSumPt / pt) < 0.18 &&  abs(deltaEtaSuperClusterTrackAtVtx) < 0.0095 &&  abs(deltaPhiSuperClusterTrackAtVtx) < 0.065 ) || ( abs(superCluster().eta) > 1.5660 && full5x5_sigmaIetaIeta < 0.033 &&  hcalOverEcal <0.09 && (ecalPFClusterIso / pt) < 0.45 &&  (hcalPFClusterIso / pt)  < 0.28 && (dr03TkSumPt / pt) < 0.18 ) )"
+options['ELECTRON_TAG_CUTS']       = "(abs(superCluster.eta)<2.1) && pt>30.0 && ( ( abs(superCluster().eta) < 1.4442 && full5x5_sigmaIetaIeta < 0.012 &&  hcalOverEcal < 0.09 && (ecalPFClusterIso / pt) < 0.37 &&  (hcalPFClusterIso / pt) < 0.25 && (dr03TkSumPt / pt) < 0.18 &&  abs(deltaEtaSuperClusterTrackAtVtx) < 0.0095 &&  abs(deltaPhiSuperClusterTrackAtVtx) < 0.065 ) ||  ( abs(superCluster().eta) > 1.5660 && full5x5_sigmaIetaIeta < 0.033 &&  hcalOverEcal <0.09 && (ecalPFClusterIso / pt) < 0.45 &&  (hcalPFClusterIso / pt)  < 0.28 && (dr03TkSumPt / pt) < 0.18 ) )"
 options['SUPERCLUSTER_COLL']       = "reducedEgamma:reducedSuperClusters"
 options['SUPERCLUSTER_CUTS']       = "abs(eta)<2.5 && !(1.4442< abs(eta) <1.566) && et>10.0"
 options['MAXEVENTS']               = cms.untracked.int32(10000) 
@@ -31,7 +31,7 @@ options['DOID']                    = cms.bool(True)
 options['OUTPUTEDMFILENAME']       = 'edmFile.root'
 options['DEBUG']                   = cms.bool(False)
 
-from PhysicsTools.TagAndProbe.treeMakerOptions_cfi import *
+from PhysicsTools.TagAndProbe.treeMakerOptions_WP90Tag_cfi import *
 
 if (varOptions.isMC):
     options['INPUT_FILE_NAME']     = "/store/mc/RunIISpring15DR74/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/Asympt50ns_MCRUN2_74_V9A-v2/00000/00C4781D-6B08-E511-8A0A-0025905A6084.root"
@@ -49,7 +49,7 @@ else:
     options['TnPHLTTagFilters']    = ["hltSingleEle22WPLooseGsfTrackIsoFilter"]
     options['TnPHLTProbeFilters']  = cms.vstring()
     options['HLTFILTERTOMEASURE']  = cms.vstring("")
-    options['GLOBALTAG']           = 'GR_P_V56'
+    options['GLOBALTAG']           = '74X_dataRun2_Prompt_v4'
     options['EVENTSToPROCESS']     = cms.untracked.VEventRange()
 
 ###################################################################
