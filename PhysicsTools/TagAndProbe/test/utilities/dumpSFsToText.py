@@ -3,29 +3,19 @@ import math
 from optparse import OptionParser
 import copy
 
-# python dumpScaleFactorTables.py --mc ../efficiency-mc-passingTrigWP90-LO.root --data ../efficiency-data-passingTrigWP90.root -b -n passingTrigWP90 --alternativeFitSig ../efficiency-data-passingTrigWP90-BreitWigner.root --alternativeFitBkg ../efficiency-data-passingTrigWP90-ExpBkg.root  --pileupUp ../efficiency-mc-passingTrigWP90-pileup-Up.root --pileupDown ../efficiency-mc-passingTrigWP90-pileup-Down.root --NLO ../efficiency-mc-passingTrigWP90-NLO-cutAndcount.root --selectionAlternativeMC ../efficiency-mc-passingTrigWP90-WP90Tag.root --selectionAlternativeData ../efficiency-data-passingTrigWP90-WP90Tag.root --fitRangeMC ../efficiency-mc-passingTrigWP90-test-range-systematics.root --fitRangeData ../efficiency-data-passingTrigWP90-range-systematics.root 
+# python dumpScaleFactorTables.py --mc ../efficiency-mc-passingTrigWP80-LO.root --data ../efficiency-data-passingTrigWP80.root -b -n passingTrigWP80 --alternativeFitSig ../efficiency-data-passingTrigWP80-BreitWigner.root --alternativeFitBkg ../efficiency-data-passingTrigWP80-ExpBkg.root  --pileupUp ../efficiency-mc-passingTrigWP80-pileup-Up.root --pileupDown ../efficiency-mc-passingTrigWP80-pileup-Down.root --NLO ../efficiency-mc-passingTrigWP80-NLO-cutAndcount.root --selectionAlternativeMC ../efficiency-mc-passingTrigWP80-WP90Tag.root --selectionAlternativeData ../efficiency-data-passingTrigWP80-WP90Tag.root
 
-def makeTable(hnum, hden, hAlternativeFitSig, hAlternativeFitBkg, hpileupUp, hpileupDown, hNLO, hMCSelectionAlternative, hDataSelectionAlternative, hMCFitRange, hDataFitRange, tablefilename, effDatafilename, effMCfilename, WP):
+def makeTable(hnum, hden, hAlternativeFitSig, hAlternativeFitBkg, hpileupUp, hpileupDown, hNLO, hMCSelectionAlternative, hDataSelectionAlternative, hMCFitRange, hDataFitRange, tablefilename):
     nX = hnum.GetNbinsX()
     nY = hnum.GetNbinsY()
-    c = ROOT.TCanvas("c", "c", 1400, 800)
-    c.SetBottomMargin(0.15)
-    #c.SetLogx()
-    ROOT.gStyle.SetOptStat(0)
-    ROOT.gStyle.SetOptTitle(0)
+    c = ROOT.TCanvas()
+    c.SetLogx()
   
     f = open(tablefilename, "w+")
-    fDataEff = open(effDatafilename, "w+")
-    fMCEff = open(effMCfilename, "w+")
-    f.write("\\begin{document} \n\\thispagestyle{empty} \n\\begin{landscape} \n\\begin{table}[ht] \n\caption*{Scale factors for triggering electron ID 25 ns data WP " + str(WP) +  "} \n\\resizebox{1.5\\textwidth}{!}{ \n\\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}\n")
-    fDataEff.write("\\begin{tabular}{|c|c|c|c|c|}\n")
-    fMCEff.write("\\begin{tabular}{|c|c|c|c|c|}\n")
-    f.write("\\hline\n")
-    fDataEff.write("\\hline\n")
-    fMCEff.write("\\hline\n")
-    f.write("$p_{T,min}$ & $p_{T,max}$ & $\\eta_{min}$ & $\\eta_{max}$ & Scale factor & signal shape unc. (\\%) & bkg. shape unc.(\\%) & pileup unc. (\\%)& NLOvsLO unc.(\\%) & tag selection unc.(\\%) & fit range unc.(\\%) & stat.unc.(\\%) & total unc. (\\%) & total unc. (abs.) \\\\ \n\\hline \n")
-    fDataEff.write("$p_{T,min}$ & $p_{T,max}$  & $\\eta_{min}$ & $\\eta_{max}$ &  effData \\\\ \n\\hline \n")
-    fMCEff.write("$p_{T,min}$ & $p_{T,max}$  & $\\eta_{min}$ & $\\eta_{max}$ &  effMC  \\\\ \n\\hline \n")
+    
+    
+    f.write("minEta  maxEta minPt maxPt effData statError effMC statError systBkgShape systSigShape systFitRange systNLOvsLO systPU systTagSelection \n")
+   
     hist = copy.copy(hnum)
     hist.Divide(hden)
     for i in xrange(1, nX+1):
@@ -33,87 +23,52 @@ def makeTable(hnum, hden, hAlternativeFitSig, hAlternativeFitBkg, hpileupUp, hpi
         pT1 = hnum.GetXaxis().GetBinLowEdge(i+1)
     
         for j in xrange(1, nY+1):
-            eta0 = hnum.GetYaxis().GetBinLowEdge(j)
-            eta1 = hnum.GetYaxis().GetBinLowEdge(j+1)
-
             x = hnum.GetBinContent(i,j)/hden.GetBinContent(i,j)
             effData = hnum.GetBinContent(i,j)
             effMC = hden.GetBinContent(i,j)
+            effDatastatError = hnum.GetBinError(i,j)
+            effMcstatError = hden.GetBinError(i,j)
             dx1 = hnum.GetBinError(i,j)/hnum.GetBinContent(i,j)
             dx2 = hden.GetBinError(i,j)/hden.GetBinContent(i,j)
             dx = math.sqrt(dx1*dx1+dx2*dx2)*x
-            
-            #systematics : signal shape
+            eta0 = hnum.GetYaxis().GetBinLowEdge(j)
+            eta1 = hnum.GetYaxis().GetBinLowEdge(j+1)
+            #systematics
             SF_AlternativeFitSig = hAlternativeFitSig.GetBinContent(i,j)/hden.GetBinContent(i,j)
-            FitSigAlternativeUnc = abs(SF_AlternativeFitSig - x)
-            #systematics : bkg shape
             SF_AlternativeFitBkg = hAlternativeFitBkg.GetBinContent(i,j)/hden.GetBinContent(i,j)
+            FitSigAlternativeUnc = abs(SF_AlternativeFitSig - x)
             FitBkgAlternativeUnc = abs(SF_AlternativeFitBkg - x)
-            #pileup uncertainty
             pileupUncertainty = max ( abs((effData/hpileupUp.GetBinContent(i,j) )  - x), abs((effData/hpileupDown.GetBinContent(i,j) )  - x))
-            #NLOvsLO  uncertainty
             SF_NLO = hnum.GetBinContent(i,j)/hNLO.GetBinContent(i,j)
             NLO_Unc = abs(SF_NLO -x)
-            #systematics: tag selection
             SF_SelectionAlternative = hDataSelectionAlternative.GetBinContent(i,j)/hMCSelectionAlternative.GetBinContent(i,j)
             SelectionUnc = abs(SF_SelectionAlternative -x)
-            #fit range systematics
+
             SF_FitRange = hDataFitRange.GetBinContent(i,j)/hMCFitRange.GetBinContent(i,j)
-            FitRangeUnc = abs(SF_FitRange - x)
-            #total uncertainty
-            totalUnc = math.sqrt(FitSigAlternativeUnc*FitSigAlternativeUnc + FitBkgAlternativeUnc*FitBkgAlternativeUnc  + pileupUncertainty*pileupUncertainty + NLO_Unc*NLO_Unc + SelectionUnc*SelectionUnc + FitRangeUnc*FitRangeUnc + dx*dx)
+            totalUnc = math.sqrt(FitSigAlternativeUnc*FitSigAlternativeUnc + FitBkgAlternativeUnc*FitBkgAlternativeUnc  + pileupUncertainty*pileupUncertainty + NLO_Unc*NLO_Unc + SelectionUnc*SelectionUnc + dx*dx)
             hist.SetBinError(i,j,totalUnc)
             
-            f.write("%4.1f &  %4.1f &  %+6.2f & %+6.2f  & %6.2f &  %6.2f  & %6.2f  &  %6.2f & %6.2f & %6.2f & %6.2f & %6.2f & %6.2f  & %6.2f  \\\\ \n"%(pT0, pT1, eta0, eta1 ,x, 100*abs(SF_AlternativeFitSig -x)/x, 100*abs(SF_AlternativeFitBkg -x)/x, 100*pileupUncertainty/x, 100*abs(SF_NLO - x)/x, 100*abs(SF_SelectionAlternative - x)/x, 100*abs(SF_FitRange -x)/x, 100.*dx/x, 100.*totalUnc/x, totalUnc))
-            fDataEff.write("%4.1f &  %4.1f &  %+6.4f & %+6.4f  & %6.4f &   \\\\ \n"%(pT0, pT1, eta0, eta1, effData))
-            fMCEff.write("%4.1f &  %4.1f &  %+6.4f & %+6.4f  & %6.4f &   \\\\ \n"%(pT0, pT1, eta0, eta1, effMC))
-            f.write("\\hline\n")
-            fMCEff.write("\\hline\n")
-            fDataEff.write("\\hline\n")
-    f.write("\\end{tabular} \n}\n\\end{table}\n\\end{landscape}\n\\end{document}\n")       
-    fDataEff.write("\\end{tabular}\n")       
-    fMCEff.write("\\end{tabular}\n")       
+            f.write("%+6.2f  %+6.2f %4.1f   %4.1f  %6.2f  %6.4f  %6.4f %6.4f %6.4f %6.4f %6.4f %6.4f %6.4f %6.4f \n"%(eta0, eta1, pT0, pT1, effData, effDatastatError, effMC, effMcstatError,   abs(SF_AlternativeFitBkg -x), abs(SF_AlternativeFitSig -x), abs(SF_FitRange - x), abs(SF_NLO - x), pileupUncertainty, abs(SF_SelectionAlternative - x)))            
     f.close()
-    fDataEff.close()
-    fMCEff.close()
+    
 
     ROOT.gStyle.SetPaintTextFormat("4.2f")
-    histForDrawing = ROOT.TH2F("drawing", "drawing", nX, hist.GetXaxis().GetBinLowEdge(1), 65., nY, hist.GetYaxis().GetBinLowEdge(1), hist.GetYaxis().GetBinLowEdge(nY + 1) )
-    for i in xrange(1, nX+1):
-        for j in xrange(1, nY+1):
-            histForDrawing.SetBinContent(i, j, hist.GetBinContent(i,j) )
-            histForDrawing.SetBinError(i, j, hist.GetBinError(i,j) )
-
-    for i in xrange(1, nX+1):
-        histForDrawing.GetXaxis().SetBinLabel(i, "[" + str(hist.GetXaxis().GetBinLowEdge(i)) + "," + str(hist.GetXaxis().GetBinUpEdge(i)) + "]")
-    histForDrawing.SetLabelSize(0.07)
-    histForDrawing.GetYaxis().SetTitle(hist.GetYaxis().GetTitle())
-    histForDrawing.GetXaxis().SetTitle(hist.GetXaxis().GetTitle())
-    histForDrawing.GetXaxis().SetTitleOffset(2.)
-    histForDrawing.Draw("COLZTEXTE")
+    #histForDrawing = TH2F("drawing", "drawing", nX, hist.GetXaxis().GetBinLowEdge(nX), 65., hist.GetYaxis().GetBinLowEdge(1), hist.GetYaxis().GetBinLowEdge(nY + 1) )
+    #print hist.GetYaxis().GetBinLowEdge(nY + 1)
+    hist.Draw()
     c.SaveAs( options.name + ".png")
 
 def main(options):
     fData = ROOT.TFile(options.data)
     fMC   = ROOT.TFile(options.mc)
-    #get files for systematics
-    #signal shape
     fAlternativeFitSig = ROOT.TFile(options.alternativeFitSig)
-    #background shape
     fAlternativeFitBkg = ROOT.TFile(options.alternativeFitBkg)
-    #pileup Up
     fpileupUp = ROOT.TFile(options.pileupUp)
-    #pileup Down
     fpileupDown = ROOT.TFile(options.pileupDown)
-    #NLO uncertainty
     fNLO = ROOT.TFile(options.NLO)
-    #data: tag selection systematics
     fDataSelectionAlternative = ROOT.TFile(options.selectionAlternativeData)
-    #MC: tag selection systematics
     fMCSelectionAlternative = ROOT.TFile(options.selectionAlternativeMC)
-    #MC: fit range systematics
     fFitRangeMC = ROOT.TFile(options.fitRangeMC)
-    #data: fit range systematics
     fFitRangeData = ROOT.TFile(options.fitRangeData)
 
     hData = ""
@@ -128,11 +83,9 @@ def main(options):
     hDataFitRange = ""
     hMCFitRange = ""
 
-    #getting histograms from files: data
     temp = "%s/%s/fit_eff_plots/" % (options.directory, options.name)
     #if("ToHLT" in temp):
     #    temp = "%s/%s/cnt_eff_plots/" %(options.directory, options.name)
-    #nominal data
     fData.cd(temp)
 
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
@@ -144,7 +97,6 @@ def main(options):
                 if (p.ClassName() == "TH2F"):
                     hData = p
 
-    #data alternative signal shape
     fAlternativeFitSig.cd(temp)
 
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
@@ -156,7 +108,6 @@ def main(options):
                 if (p.ClassName() == "TH2F"):
                     hAlternativeFitSig = p
 
-    # data alternative background shape
     fAlternativeFitBkg.cd(temp)
 
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
@@ -168,7 +119,6 @@ def main(options):
                 if (p.ClassName() == "TH2F"):
                     hAlternativeFitBkg = p
                     
-    #data tag selection systematics
     fDataSelectionAlternative.cd(temp)
 
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
@@ -180,7 +130,6 @@ def main(options):
                 if (p.ClassName() == "TH2F"):
                     hDataSelectionAlternative = p
 
-    #fit range systematics
     fFitRangeData.cd(temp)
 
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
@@ -192,8 +141,6 @@ def main(options):
                 if (p.ClassName() == "TH2F"):
                     hDataFitRange = p
 
-    #getting histograms from files: MC
-    #nominal MC
     temp = "%s/MCtruth_%s/fit_eff_plots/" % (options.directory, options.name)
     fMC.cd(temp)
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
@@ -215,7 +162,6 @@ def main(options):
                 if (p.ClassName() == "TH2F"):
                     hpileupUp = p
 
-    #pileup down
     fpileupDown.cd(temp)
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
     for k in  keyList:
@@ -226,7 +172,6 @@ def main(options):
                 if (p.ClassName() == "TH2F"):
                     hpileupDown = p
 
-    #tag selection systematics
     fMCSelectionAlternative.cd(temp)
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
     for k in  keyList:
@@ -237,7 +182,6 @@ def main(options):
                 if (p.ClassName() == "TH2F"):
                     hMCSelectionAlternative = p
 
-    # fit range systematics
     fFitRangeMC.cd(temp)
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
     for k in  keyList:
@@ -248,7 +192,6 @@ def main(options):
                 if (p.ClassName() == "TH2F"):
                     hMCFitRange = p
 
-    #getting histograms from files with cut and count: this we do only for NLO vs LO uncertainty
     temp = "%s/MCtruth_%s/cnt_eff_plots/" % (options.directory, options.name)   
     fNLO.cd(temp)
     keyList = [key.GetName() for key in ROOT.gDirectory.GetListOfKeys()]
@@ -261,17 +204,8 @@ def main(options):
                     hNLO = p                 
                     
     temp = "ScaleFactor_%s_%s.txt"%(options.directory, options.name)
-    tempEffData =  "EffData_%s_%s.txt"%(options.directory, options.name)
-    tempEffMC =  "EffMC_%s_%s.txt"%(options.directory, options.name)
     #hData.Divide(hMC)
-    if options.name == "passingTrigWP80" :
-        WP = 80
-    elif options.name == "passingTrigWP90":
-        WP = 90
-    else :
-        WP =-1
-
-    makeTable(hData, hMC, hAlternativeFitSig, hAlternativeFitBkg, hpileupUp, hpileupDown, hNLO, hMCSelectionAlternative, hDataSelectionAlternative,hMCFitRange, hDataFitRange, temp, tempEffData, tempEffMC, WP)
+    makeTable(hData, hMC, hAlternativeFitSig, hAlternativeFitBkg, hpileupUp, hpileupDown, hNLO, hMCSelectionAlternative, hDataSelectionAlternative, hMCFitRange, hDataFitRange, temp)
     
     fData.Close()
     fMC.Close()
