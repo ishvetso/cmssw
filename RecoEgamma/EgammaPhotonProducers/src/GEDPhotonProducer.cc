@@ -66,8 +66,13 @@ GEDPhotonProducer::GEDPhotonProducer(const edm::ParameterSet& config) :
       consumes<reco::PhotonCollection>(photonProducer_);
     pfCandidates_      = 
       consumes<reco::PFCandidateCollection>(conf_.getParameter<edm::InputTag>("pfCandidates"));
-    particleBasedIsolationToken   = 
-       consumes<edm::ValueMap<std::vector<reco::PFCandidateRef > > >(edm::InputTag("particleBasedIsolationTmp", "gedPhotonsTmp"));
+
+    phoChargedIsolationToken_CITK      = 
+      consumes<edm::ValueMap<float>>(conf_.getParameter<edm::InputTag>("chargedHadronIsolation"));
+    phoNeutralHadronIsolationToken_CITK      = 
+      consumes<edm::ValueMap<float>>(conf_.getParameter<edm::InputTag>("neutralHadronIsolation"));
+    phoPhotonIsolationToken_CITK      = 
+      consumes<edm::ValueMap<float>>(conf_.getParameter<edm::InputTag>("photonIsolation"));   
 
   } else {
 
@@ -245,17 +250,23 @@ void GEDPhotonProducer::produce(edm::Event& theEvent, const edm::EventSetup& the
   Handle<reco::PhotonCoreCollection> photonCoreHandle;
   bool validPhotonHandle= false;
   Handle<reco::PhotonCollection> photonHandle;
-  //this are changes done to test photon isolation with map-based footprint
-  Handle< edm::ValueMap<std::vector<reco::PFCandidateRef > > > particleBasedIsolationMap;  
+  //value maps for isolation
+  edm::Handle<edm::ValueMap<float> > phoChargedIsolationMap_CITK;
+  edm::Handle<edm::ValueMap<float> > phoNeutralHadronIsolationMap_CITK;
+  edm::Handle<edm::ValueMap<float> > phoPhotonIsolationMap_CITK;
 
   if ( reconstructionStep_ == "final" ) { 
     theEvent.getByToken(photonProducerT_,photonHandle);
+    //get isolation objects
+    theEvent.getByToken(phoChargedIsolationToken_CITK,phoChargedIsolationMap_CITK);
+    theEvent.getByToken(phoNeutralHadronIsolationToken_CITK,phoNeutralHadronIsolationMap_CITK);
+    theEvent.getByToken(phoPhotonIsolationToken_CITK,phoPhotonIsolationMap_CITK);
     if ( photonHandle.isValid()) {
       validPhotonHandle=true;  
     } else {
       throw cms::Exception("GEDPhotonProducer") << "Error! Can't get the product " <<   photonProducer_.label() << "\n";
     }
-    theEvent.getByToken(particleBasedIsolationToken, particleBasedIsolationMap); 
+    //theEvent.getByToken(particleBasedIsolationToken, particleBasedIsolationMap); 
   } else {
     
     theEvent.getByToken(photonCoreProducerT_,photonCoreHandle);
@@ -396,7 +407,9 @@ void GEDPhotonProducer::produce(edm::Event& theEvent, const edm::EventSetup& the
 			 vertexHandle,
 			 outputPhotonCollection,
 			 iSC,
-       particleBasedIsolationMap);
+       phoChargedIsolationMap_CITK,
+       phoNeutralHadronIsolationMap_CITK,
+       phoPhotonIsolationMap_CITK);
 
 
 
@@ -696,7 +709,7 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
 					     const edm::Handle<reco::PFCandidateCollection> pfEGCandidateHandle,
 					     edm::ValueMap<reco::PhotonRef> pfEGCandToPhotonMap,
 					     edm::Handle< reco::VertexCollection >  & vertexHandle,
-					     reco::PhotonCollection & outputPhotonCollection, int& iSC, edm::Handle< edm::ValueMap<std::vector<reco::PFCandidateRef > > >& particleBasedIsolationMap_) {
+					     reco::PhotonCollection & outputPhotonCollection, int& iSC, const edm::Handle<edm::ValueMap<float>>& chargedHadrons_, const edm::Handle<edm::ValueMap<float>>& neutralHadrons_, const edm::Handle<edm::ValueMap<float>>& photons_) {
 
   
  
@@ -728,7 +741,13 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
   // Calculate the PF isolation and ID - for the time being there is no calculation. Only the setting
     reco::Photon::PflowIsolationVariables pfIso;
     reco::Photon::PflowIDVariables pfID;
-    thePFBasedIsolationCalculator_->calculate (&newCandidate, pfCandidateHandle, vertexHandle, evt, es, pfIso );
+    thePFBasedIsolationCalculator_->calculate (&newCandidate, pfCandidateHandle, vertexHandle, evt, es, pfIso );//is this line needed ???
+    //get the pointer for the photon object
+    edm::Ptr<reco::Photon> photonPtr(photonHandle, lSC);
+
+    pfIso.chargedHadronIso = (*chargedHadrons_)[photonPtr] ;
+    pfIso.neutralHadronIso = (*neutralHadrons_)[photonPtr];
+    pfIso.photonIso        = (*photons_)[photonPtr];
     newCandidate.setPflowIsolationVariables(pfIso);
     newCandidate.setPflowIDVariables(pfID);
 
@@ -756,14 +775,14 @@ void GEDPhotonProducer::fillPhotonCollection(edm::Event& evt,
     //std::cout << " type " <<newCandidate.getCandidateP4type() <<  " standard p4 after " << newCandidate.p4() << " energy " << newCandidate.energy() << std::endl;
     //std::cout << " final p4 " << newCandidate.p4() << " energy " << newCandidate.energy() <<  std::endl;
 
-    edm::Ptr<reco::Photon> photonPtr(photonHandle, lSC);
-    std::cout << " Start the test by Ivan .... " << std::endl;
-    std::cout << reconstructionStep_ << std::endl;
-    for ( auto itr = (*particleBasedIsolationMap_)[photonPtr].begin(); itr != (*particleBasedIsolationMap_)[photonPtr].end(); ++itr ) 
-    {
-         std::cout << itr->key();
-    }
-    std::cout << " end the test by Ivan .... " << std::endl;
+    //edm::Ptr<reco::Photon> photonPtr(photonHandle, lSC);
+    //std::cout << " Start the test by Ivan .... " << std::endl;
+    //std::cout << reconstructionStep_ << std::endl;
+    //for ( auto itr = (*particleBasedIsolationMap_)[photonPtr].begin(); itr != (*particleBasedIsolationMap_)[photonPtr].end(); ++itr ) 
+   // {
+    //     std::cout << itr->key();
+    //}
+    //std::cout << " end the test by Ivan .... " << std::endl;
     outputPhotonCollection.push_back(newCandidate);        
     
   }
