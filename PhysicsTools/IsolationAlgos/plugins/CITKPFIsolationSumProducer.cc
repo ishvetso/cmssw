@@ -191,6 +191,7 @@ void PFIsolationSumProducer::fillDescriptions(edm::ConfigurationDescriptions & d
     descIsoConeDefinitions.addOptional<double>("VetoConeSizeEndcaps", 0.0);
     descIsoConeDefinitions.addOptional<int>("vertexIndex",0);
     descIsoConeDefinitions.addOptional<edm::InputTag>("particleBasedIsolation",edm::InputTag("no default"))->setComment("map for footprint removal that is used for photons");
+    descIsoConeDefinitions.addOptional<edm::InputTag>("pc2pfMap",edm::InputTag("packedPFCandidates"))->setComment("association map to match packedPFCandidates to particleFlow");
 
 
     std::vector<edm::ParameterSet> isolationConeDefinitions;
