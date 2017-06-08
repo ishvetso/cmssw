@@ -6,6 +6,7 @@ IsoConeDefinitions = cms.VPSet(cms.PSet( isolationAlgo = cms.string('PhotonPFIso
                                       miniAODVertexCodes = cms.vuint32(2,3),
                                       vertexIndex = cms.int32(0),
                                       particleBasedIsolation = cms.InputTag("reducedEgamma", "reducedPhotonPfCandMap"),
+                                      pc2pfMap = cms.InputTag('packedPFCandidates'),
 
                                     ),
                                cms.PSet( isolationAlgo = cms.string('PhotonPFIsolationWithMapBasedVeto'),
@@ -14,6 +15,7 @@ IsoConeDefinitions = cms.VPSet(cms.PSet( isolationAlgo = cms.string('PhotonPFIso
                                       miniAODVertexCodes = cms.vuint32(2,3),
                                       vertexIndex = cms.int32(0),
                                       particleBasedIsolation = cms.InputTag("reducedEgamma", "reducedPhotonPfCandMap"),
+                                      pc2pfMap = cms.InputTag('packedPFCandidates'),
                                     ),
                                cms.PSet( isolationAlgo = cms.string('PhotonPFIsolationWithMapBasedVeto'),
                                       coneSize = cms.double(0.3),
@@ -21,6 +23,7 @@ IsoConeDefinitions = cms.VPSet(cms.PSet( isolationAlgo = cms.string('PhotonPFIso
                                       miniAODVertexCodes = cms.vuint32(2,3),
                                       vertexIndex = cms.int32(0),
                                       particleBasedIsolation = cms.InputTag("reducedEgamma", "reducedPhotonPfCandMap"),
+                                      pc2pfMap = cms.InputTag('packedPFCandidates'),
                                     )
     )
 
