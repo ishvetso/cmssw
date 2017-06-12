@@ -74,8 +74,8 @@ public:
     _isolateAgainst(c.getParameter<std::string>("isolateAgainst")), //isolate against either h+, h0 or gamma
     _miniAODVertexCodes(c.getParameter<std::vector<unsigned> >("miniAODVertexCodes")), //quality flags to be used for association with the vertex configurable, the vertex can be chosen
     _vertexIndex(c.getParameter<int> ("vertexIndex")),//vertex of interest
-    _particleBasedIsolation(c.getParameter<edm::InputTag>("particleBasedIsolation")),//particleBasedIsolation (needed for the footprint)
-    _pc2pfMap(c.getParameter<edm::InputTag>("pc2pfMap")){} 
+    _particleBasedIsolation(c.getParameter<edm::InputTag>("particleBasedIsolation"))//particleBasedIsolation (needed for the footprint)
+     _pc2pfMap(c.getParameter<edm::InputTag>("pc2pfMap")){}
         
   PhotonPFIsolationWithMapBasedVeto(const PhotonPFIsolationWithMapBasedVeto&) = delete;
   PhotonPFIsolationWithMapBasedVeto& operator=(const PhotonPFIsolationWithMapBasedVeto&) =delete;
@@ -95,7 +95,7 @@ public:
  virtual void getEventInfo(const edm::Event& iEvent) override
   {
       iEvent.getByToken(particleBasedIsolationToken_, particleBasedIsolationMap); 
-      iEvent.getByToken(pc2pfMapToken, pc2pfMap); 
+      if(usepc2pf)iEvent.getByToken(pc2pfMapToken, pc2pfMap); 
   };			 
   
   
@@ -103,7 +103,10 @@ public:
   void setConsumes(edm::ConsumesCollector iC) override
   {
       particleBasedIsolationToken_ = iC.mayConsume<edm::ValueMap<std::vector<reco::PFCandidateRef > > >(_particleBasedIsolation);
+      if (_pc2pfMap.label().size() != 0) {
       pc2pfMapToken = iC.mayConsume<reco::PFMap>(_pc2pfMap);
+      usepc2pf = true;
+    }
   }
 
   //! Destructor
@@ -116,6 +119,7 @@ private:
   const unsigned _vertexIndex;
   const edm::InputTag _particleBasedIsolation;
   const edm::InputTag _pc2pfMap;
+  bool usepc2pf = false;
 
   
 };
@@ -133,9 +137,8 @@ bool PhotonPFIsolationWithMapBasedVeto::isInIsolationCone(const reco::CandidateP
   pat::patPhotonPtr aspat_photonptr(photon);
   reco::recoPhotonPtr asreco_photonptr(photon);
   
+  //convert candidate to either reco::PFCandidate or pat::PackedCandidate
   pat::PackedCandidatePtr aspacked(pfCandidate);
-  //edm::Ref<pat::PackedCandidate> aspackedRef(pfCandidate, pfCandidate.key());
-
   reco::PFCandidatePtr aspf(pfCandidate);
 
   
@@ -146,8 +149,8 @@ bool PhotonPFIsolationWithMapBasedVeto::isInIsolationCone(const reco::CandidateP
   // dealing here with patObjects: miniAOD case
   if ( aspacked.get() )    
   {
-    if( aspat_photonptr.get() )inFootprint = isInFootprint(aspat_photonptr ->associatedPackedPFCandidates(),aspacked);
-    else if ( asreco_photonptr.get() )inFootprint = isInFootprintAlternative((*particleBasedIsolationMap)[photon], (*pc2pfMap)[aspacked]); 
+    if( aspat_photonptr.get() )inFootprint = isInFootprint(aspat_photonptr ->associatedPackedPFCandidates(),aspacked); //when pat::Photon is used associatedPackedPFCandidates() is used for the footprint
+    else if ( asreco_photonptr.get() )inFootprint = isInFootprintAlternative((*particleBasedIsolationMap)[photon], (*pc2pfMap)[aspacked]); // when reco::Photon is used (associatedPackedPFCandidates() is not available) particleBasedIsolation is used and packedPFCandidates are used and matched to reco::PFCandidate's via edm::Association
     else {
       throw cms::Exception("InvalidIsolationInput")
       << "The supplied candidate to be used as isolation "
