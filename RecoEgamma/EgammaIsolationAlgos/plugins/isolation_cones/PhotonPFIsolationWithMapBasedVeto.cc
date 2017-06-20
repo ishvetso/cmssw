@@ -74,7 +74,7 @@ public:
     _isolateAgainst(c.getParameter<std::string>("isolateAgainst")), //isolate against either h+, h0 or gamma
     _miniAODVertexCodes(c.getParameter<std::vector<unsigned> >("miniAODVertexCodes")), //quality flags to be used for association with the vertex configurable, the vertex can be chosen
     _vertexIndex(c.getParameter<int> ("vertexIndex")),//vertex of interest
-    _particleBasedIsolation(c.getParameter<edm::InputTag>("particleBasedIsolation"))//particleBasedIsolation (needed for the footprint)
+    _particleBasedIsolation(c.getParameter<edm::InputTag>("particleBasedIsolation")),//particleBasedIsolation (needed for the footprint)
      _pc2pfMap(c.getParameter<edm::InputTag>("pc2pfMap")){}
         
   PhotonPFIsolationWithMapBasedVeto(const PhotonPFIsolationWithMapBasedVeto&) = delete;
